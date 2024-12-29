@@ -1,0 +1,11 @@
+# Ignore folders containing models
+*model*/
+
+# Ignore folders containing datasets
+*data*/
+
+# Basic
+__pycache__/
+.env
+/archived/
+.DS_Store
