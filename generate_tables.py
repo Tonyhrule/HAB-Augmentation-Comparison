@@ -234,7 +234,7 @@ def generate_feature_importance_table():
 
 def main():
     """Generate all tables"""
-    print("Generating tables for publication...")
+    print("Generating tables...")
     
     # Generate performance metrics table
     performance_df = generate_performance_table()
