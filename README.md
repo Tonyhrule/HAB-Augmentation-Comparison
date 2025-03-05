@@ -1,4 +1,4 @@
-# Synthetic Data Augmentation for Enhancing Harmful Algal Bloom Detection with Artificial Intelligence
+# Evaluating Synthetic Data Generation Approaches for Improved Machine Learning Detection of Harmful Algal Blooms
 
 ## Abstract
 
