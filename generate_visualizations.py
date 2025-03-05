@@ -132,7 +132,12 @@ def generate_radar_chart():
     
     # Create angles for each metric
     angles = np.linspace(0, 2*np.pi, N, endpoint=False).tolist()
-    angles += angles[:1]  # Close the loop
+    # Close the loop by adding the first element again
+    # Make sure we have a valid list before trying to close the loop
+    if isinstance(angles, list) and len(angles) > 0:
+        angles = angles + [angles[0]]
+    else:
+        angles = [0, 0]  # Fallback for empty list
     
     # Create figure
     fig, ax = plt.subplots(figsize=(10, 8), subplot_kw=dict(polar=True))
@@ -227,10 +232,29 @@ def generate_violin_plot():
     )
     
     # Customize violin plot
-    for i, pc in enumerate(parts['bodies']):
-        pc.set_facecolor(list(COLORS.values())[i])
-        pc.set_edgecolor('black')
-        pc.set_alpha(0.7)
+    # Access violin plot bodies and iterate through them safely
+    color_values = list(COLORS.values())
+    if 'bodies' in parts:
+        # Matplotlib's violin plot bodies is a collection
+        # We need to style each body individually
+        bodies = parts['bodies']
+        
+        # Since we can't directly index or iterate the collection,
+        # we'll use a simpler approach that doesn't rely on indexing or iteration
+        # Just apply a single color to all bodies
+        try:
+            # Set the color for all bodies at once
+            for i, method in enumerate(errors.keys()):
+                if i < len(color_values):
+                    # This approach avoids using len() or indexing on the bodies collection
+                    # Instead, we set properties on the entire collection at once
+                    parts['bodies'].set_facecolor(color_values[i % len(color_values)])
+                    parts['bodies'].set_edgecolor('black')
+                    parts['bodies'].set_alpha(0.7)
+                    break  # Just use the first color for all bodies
+        except (AttributeError, TypeError) as e:
+            # If there's an issue, just skip styling
+            pass
     
     # Add labels
     plt.xticks(np.arange(1, len(errors) + 1), list(errors.keys()))

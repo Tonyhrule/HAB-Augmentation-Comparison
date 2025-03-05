@@ -287,3 +287,22 @@ You can also run individual components of the pipeline:
 4. Brown, T. B., Mann, B., Ryder, N., Subbiah, M., Kaplan, J., Dhariwal, P., ... & Amodei, D. (2020). Language Models are Few-Shot Learners. arXiv preprint arXiv:2005.14165.
 
 5. Zhao, S., Xie, X., & Chen, S. (2021). Copula-Based Synthetic Data Generation for Machine Learning Emulators in Weather and Climate Modeling. Geoscientific Model Development, 14(7), 4641-4654.
+
+## Streamlit App
+
+A Streamlit app is provided for interactive exploration and comparison of the synthetic data augmentation methods.
+
+### Running the Streamlit App
+
+```bash
+streamlit run app.py
+```
+
+### App Features
+
+- **Introduction**: Overview of the project and research questions
+- **Dataset Exploration**: Explore the original dataset with visualizations
+- **Run Pipelines**: Run the different data processing and model training pipelines
+- **Method Comparison**: Compare the performance of different synthetic data augmentation methods
+- **Visualizations**: View publication-quality visualizations of the results
+- **About**: Learn more about the project and methods
