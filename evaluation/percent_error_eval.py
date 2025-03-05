@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 output_dir = "output"
-base_model_dir = "base model"
-synthetic_models_dir = "synthetic models"
+base_model_dir = "base_model"
+synthetic_models_dir = "synthetic_models"
 figures_dir = "figures"
 os.makedirs(figures_dir, exist_ok=True)
 

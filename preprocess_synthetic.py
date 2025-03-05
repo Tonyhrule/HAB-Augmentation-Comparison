@@ -31,7 +31,6 @@ def validate_structure(df):
     required_columns = FEATURES + [TARGET]
     if not all(col in df.columns for col in required_columns):
         raise ValueError(f"DataFrame does not contain required columns: {required_columns}")
-    print("Dataset structure validated.")
 
 def clean_data(data):
     original_shape = data.shape
@@ -40,18 +39,29 @@ def clean_data(data):
     return data
 
 def transform_target(data):
-    print("Applying log transformation to the target variable...")
+    # Apply log transformation to address skewness in the target variable
     data[TARGET] = np.log1p(data[TARGET])
     return data
 
 def generate_conditional_synthetic_data(data, num_samples):
     print("Generating synthetic data using Gaussian Copula...")
+    
+    # Track computational cost
+    from utils.cost_tracker import CostTracker
+    cost_tracker = CostTracker("gaussian_copula").start()
+    
     model = GaussianMultivariate()
     model.fit(data)
     synthetic_data = model.sample(num_samples)
     synthetic_data = pd.DataFrame(synthetic_data, columns=data.columns)
     synthetic_data = clip_synthetic_data(synthetic_data, data)
+    
+    # Stop tracking and save metrics
+    cost_tracker.stop()
+    cost_tracker.save_to_file("output/cost_gaussian_copula.json")
+    print(f"Execution time: {cost_tracker.get_execution_time():.2f} seconds")
     print("Synthetic data generated successfully.")
+    
     return synthetic_data
 
 def clip_synthetic_data(synthetic_data, real_data):
@@ -60,24 +70,26 @@ def clip_synthetic_data(synthetic_data, real_data):
     return synthetic_data
 
 def perform_ks_test(data, synthetic_data):
-    print("\nPerforming KS test...")
+    # Kolmogorov-Smirnov test to compare distributions between real and synthetic data
     for column in FEATURES + [TARGET]:
         stat, p_value = ks_2samp(data[column], synthetic_data[column])
         print(f"{column}: KS Statistic = {stat}, p-value = {p_value}")
 
 def preprocess_and_combine(real_data, synthetic_data, weight=0.20):
-    print("Combining real and synthetic data...")
+    # Sample a fraction of synthetic data based on weight parameter
     synthetic_data_sampled = synthetic_data.sample(frac=weight, random_state=RANDOM_STATE, replace=True)
     combined_data = pd.concat([real_data, synthetic_data_sampled], ignore_index=True)
 
     X = combined_data[FEATURES]
     y = combined_data[TARGET]
 
+    # Generate polynomial features for interaction terms
     poly = PolynomialFeatures(degree=2, interaction_only=True, include_bias=False)
     X_poly = poly.fit_transform(X)
 
     X_train, X_test, y_train, y_test = train_test_split(X_poly, y, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
+    # Use median imputation for robustness to outliers
     imputer = SimpleImputer(strategy="median")
     X_train = imputer.fit_transform(X_train)
     X_test = imputer.transform(X_test)
@@ -89,30 +101,35 @@ def preprocess_and_combine(real_data, synthetic_data, weight=0.20):
     return X_train_scaled, X_test_scaled, y_train, y_test, scaler
 
 def reverse_log_transformation(y_test, y_pred):
+    # Reverse the log transformation applied earlier to get values in original scale
     y_test_reversed = np.expm1(y_test)
     y_pred_reversed = np.expm1(y_pred)
     return y_test_reversed, y_pred_reversed
 
 def evaluate_model_performance(y_test, y_pred):
+    # Convert predictions back to original scale before calculating metrics
     y_test_reversed, y_pred_reversed = reverse_log_transformation(y_test, y_pred)
+    
+    # Calculate standard regression metrics
     mse = mean_squared_error(y_test_reversed, y_pred_reversed)
     rmse = np.sqrt(mse)
     mae = mean_absolute_error(y_test_reversed, y_pred_reversed)
     r2 = r2_score(y_test_reversed, y_pred_reversed)
+    
     print(f"  MSE: {mse}")
     print(f"  RMSE: {rmse}")
     print(f"  MAE: {mae}")
     print(f"  R² Score: {r2}")
 
 def train_and_evaluate_models(X_train_scaled, X_test_scaled, y_train, y_test):
-    print("\nTraining Ridge Regression model...")
+    # Train and evaluate Ridge Regression model
     ridge_model = Ridge(alpha=10.0)
     ridge_model.fit(X_train_scaled, y_train)
     y_pred_ridge = ridge_model.predict(X_test_scaled)
     print("Ridge Regression Performance:")
     evaluate_model_performance(y_test, y_pred_ridge)
 
-    print("\nTraining Random Forest model...")
+    # Train and evaluate Random Forest model with optimized hyperparameters
     rf_model = RandomForestRegressor(n_estimators=600, max_depth=30, min_samples_split=4, random_state=RANDOM_STATE)
     rf_model.fit(X_train_scaled, y_train)
     y_pred_rf = rf_model.predict(X_test_scaled)

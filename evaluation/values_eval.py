@@ -5,6 +5,8 @@ from math import sqrt
 
 output_dir = "output"
 models_dir = "models"
+base_model_dir = "base_model"
+synthetic_models_dir = "synthetic_models"
 
 def calculate_metrics(model_path, data_path, scaler_path):
     try:

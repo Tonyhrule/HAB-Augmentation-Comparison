@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score, RepeatedKFold
 
 output_dir = "output"
-base_model_dir = "base model"
-synthetic_models_dir = "synthetic models"
-data_dir = "data s"
+base_model_dir = "base_model"
+synthetic_models_dir = "synthetic_models"
+data_dir = "synthetic_data"
 figures_dir = "figures"
 os.makedirs(figures_dir, exist_ok=True)
 

@@ -1,0 +1,10 @@
+Feature,Non-Synthetic,Gaussian Copula,LLM Multi-Agent
+Temperature,0.32,0.30,0.31
+Salinity,0.28,0.26,0.27
+UVB,0.15,0.16,0.16
+Temperature²,0.08,0.09,0.08
+Salinity²,0.06,0.07,0.06
+UVB²,0.04,0.05,0.05
+Temperature×Salinity,0.03,0.03,0.03
+Temperature×UVB,0.02,0.02,0.02
+Salinity×UVB,0.02,0.02,0.02

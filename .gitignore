@@ -5,7 +5,7 @@
 *data*/
 
 # Ignore folders containing old code
-/archived/
+/archive/
 
 # Python
 __pycache__/
@@ -41,8 +41,7 @@ ENV/
 *.swo
 
 # Project specific
-output/*.pkl
-output/*.json
+*output*/
 .env
 
 # Jupyter Notebook

@@ -24,54 +24,55 @@ def load_data(data_path):
     return pd.read_excel(data_path)
 
 def clean_data(data):
-    print("Cleaning data: removing rows with NaN values...")
     original_shape = data.shape
     data = data.dropna()
     print(f"Original shape: {original_shape}, Cleaned shape: {data.shape}")
     return data
 
 def preprocess_data(data):
-    print("Preprocessing data...")
     X = data[FEATURES]
     y = data[TARGET]
-    print("Imputing missing values using mean...")
+    
+    # Use median imputation for robustness to outliers
     imputer = SimpleImputer(strategy='median')
     X = imputer.fit_transform(X)
+    
     if len(y.shape) > 1:
-        print("Flattening target variable...")
         y = y.ravel()
-    print("Splitting data into train and test sets...")
+        
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE
     )
-    print("Standardizing features...")
+    
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
-    print("Preprocessing complete!")
+    
     return X_train_scaled, X_test_scaled, y_train, y_test, scaler
 
 def evaluate_basic_model(X_train, X_test, y_train, y_test):
-    print("\nTraining and evaluating a basic Ridge regression model...")
+    # Train a basic Ridge regression model with fixed alpha
     model = Ridge(alpha=10.0) 
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
+    
+    # Calculate evaluation metrics
     mse = mean_squared_error(y_test, y_pred)
     rmse = np.sqrt(mse)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
+    
     print("\nEvaluation Metrics:")
     print(f"  MSE: {mse}")
     print(f"  RMSE: {rmse}")
     print(f"  MAE: {mae}")
     print(f"  R² Score: {r2}")
+    
     return mse, rmse, mae, r2
 
 def save_data(X_train, X_test, y_train, y_test, scaler, output_dir):
-    print("Saving processed data...")
     joblib.dump((X_train, X_test, y_train, y_test), os.path.join(output_dir, 'processed_data.pkl'))
     joblib.dump(scaler, os.path.join(output_dir, 'scaler.pkl'))
-    print("Processed data saved successfully!")
 
 def main():
     data = load_data(DATA_PATH)
