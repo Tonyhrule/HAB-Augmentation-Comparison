@@ -331,3 +331,7 @@ A Streamlit app is provided for interactive exploration and comparison of the sy
 ```bash
 streamlit run app.py
 ```
+
+## License
+This project is licensed under the Apache License 2.0. See the [LICENSE](https://github.com/Tonyhrule/HAB-Augmentation-Comparison/blob/main/LICENSE) file for details.
+
