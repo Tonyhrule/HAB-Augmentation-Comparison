@@ -331,12 +331,3 @@ A Streamlit app is provided for interactive exploration and comparison of the sy
 ```bash
 streamlit run app.py
 ```
-
-### App Features
-
-- **Introduction**: Overview of the project and research questions
-- **Dataset Exploration**: Explore the original dataset with visualizations
-- **Run Pipelines**: Run the different data processing and model training pipelines
-- **Method Comparison**: Compare the performance of different synthetic data augmentation methods
-- **Visualizations**: View publication-quality visualizations of the results
-- **About**: Learn more about the project and methods
