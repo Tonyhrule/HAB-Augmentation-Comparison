@@ -33,7 +33,8 @@ FIGURES_DIR = "figures"
 COLORS = {
     "Non-Synthetic": "#3498db",  # Blue
     "Gaussian Copula": "#e74c3c",  # Red
-    "LLM Multi-Agent": "#2ecc71"  # Green
+    "LLM Multi-Agent": "#2ecc71",  # Green
+    "CTGAN": "#9b59b6"  # Purple
 }
 
 # Helper functions
@@ -68,6 +69,12 @@ def load_cost_data():
             cost_data["llm_multi_agent"] = json.load(f)
     except FileNotFoundError:
         cost_data["llm_multi_agent"] = {"execution_time": 0, "api_calls": 0, "api_tokens": 0, "api_cost": 0, "memory_usage": {"avg": 0, "peak": 0}}
+    
+    try:
+        with open("output/cost_ctgan.json", 'r') as f:
+            cost_data["ctgan"] = json.load(f)
+    except FileNotFoundError:
+        cost_data["ctgan"] = {"execution_time": 0, "memory_usage": {"avg": 0, "peak": 0}}
         
     return cost_data
 
@@ -210,9 +217,10 @@ def main():
         st.write("""
         This application demonstrates the use of synthetic data augmentation methods for enhancing harmful algal bloom (HAB) detection using machine learning.
         
-        We compare two approaches:
+        We compare three approaches:
         1. **Gaussian Copula Method**: A statistical approach that preserves the marginal distributions and correlation structure of the original data.
         2. **LLM Collaborative Multi-Agent Pipeline**: A novel approach using large language models (LLMs) with domain expertise to generate realistic synthetic data points.
+        3. **CTGAN (Conditional Tabular GAN) Method**: A deep learning approach that uses adversarial training to generate high-quality synthetic tabular data.
         
         Use the sidebar to navigate through different sections of the app.
         """)
@@ -223,7 +231,7 @@ def main():
         
         1. Can synthetic data augmentation improve the performance of HAB detection models?
         2. How do different synthetic data generation methods compare in terms of model performance?
-        3. What are the computational trade-offs between statistical and LLM-based approaches?
+        3. What are the computational trade-offs between statistical, LLM-based, and deep learning approaches?
         """)
         
         # Display an example visualization
@@ -348,8 +356,18 @@ def main():
                 else:
                     st.error("Error in LLM Multi-Agent pipeline.")
         
+        # CTGAN
+        st.subheader("4. CTGAN Synthetic Data Generation")
+        if st.button("Run CTGAN Pipeline"):
+            with st.spinner("Running CTGAN pipeline..."):
+                success = run_pipeline("python preprocess_gan_synthetic.py")
+                if success:
+                    st.success("CTGAN pipeline completed successfully!")
+                else:
+                    st.error("Error in CTGAN pipeline.")
+        
         # Comparison
-        st.subheader("4. Comparison Training and Evaluation")
+        st.subheader("5. Comparison Training and Evaluation")
         if st.button("Run Comparison Pipeline"):
             with st.spinner("Running comparison pipeline..."):
                 success = run_pipeline("python train_with_llm.py")
@@ -359,7 +377,7 @@ def main():
                     st.error("Error in comparison pipeline.")
         
         # Generate visualizations
-        st.subheader("5. Generate Advanced Visualizations")
+        st.subheader("6. Generate Advanced Visualizations")
         if st.button("Generate Visualizations"):
             with st.spinner("Generating visualizations..."):
                 success = run_pipeline("python generate_visualizations.py")
@@ -436,7 +454,7 @@ def main():
                 # Add a select box for model choice
                 model_choice = st.selectbox(
                     "Select Model",
-                    ["Model with Gaussian Synthetic Data", "Model with LLM Synthetic Data", "Model without Synthetic Data"],
+                    ["Model with Gaussian Synthetic Data", "Model with LLM Synthetic Data", "Model with CTGAN Synthetic Data", "Model without Synthetic Data"],
                     help="Choose which trained model to use for prediction"
                 )
             
@@ -452,6 +470,9 @@ def main():
             elif model_choice == "Model with LLM Synthetic Data":
                 model_path = os.path.join("models", "model_with_llm_synthetic.pkl")
                 scaler_path = os.path.join("output", "scaler_with_llm_synthetic.pkl")
+            elif model_choice == "Model with CTGAN Synthetic Data":
+                model_path = os.path.join("models", "model_with_gan_synthetic.pkl")
+                scaler_path = os.path.join("output", "scaler_with_gan_synthetic.pkl")
             else:
                 model_path = os.path.join("models", "model_non_synthetic.pkl")
                 scaler_path = os.path.join("output", "scaler.pkl")
@@ -902,7 +923,7 @@ def main():
         st.write("""
         ## Evaluating Synthetic Data Generation Approaches for Improved Machine Learning Detection of Harmful Algal Blooms
         
-        This study investigates the effectiveness of different synthetic data augmentation methods for enhancing harmful algal bloom (HAB) detection using machine learning. We compare two approaches: a statistical method using Gaussian Copulas and a novel LLM-based collaborative multi-agent pipeline.
+        This study investigates the effectiveness of different synthetic data augmentation methods for enhancing harmful algal bloom (HAB) detection using machine learning. We compare three approaches: a statistical method using Gaussian Copulas, a novel LLM-based collaborative multi-agent pipeline, and a deep learning approach using Conditional Tabular GANs (CTGAN).
         
         ### Methods
         
@@ -922,13 +943,22 @@ def main():
         2. **Domain Expert Agent**: Validates generated data points for domain consistency and provides feedback
         3. **Data Scientist Agent**: Refines the dataset to maintain statistical properties and feature correlations
         
+        #### CTGAN (Conditional Tabular GAN) Method
+        
+        The CTGAN approach leverages deep learning to generate high-quality synthetic tabular data:
+        
+        1. Uses mode-specific normalization to handle mixed discrete and continuous variables
+        2. Employs conditional generation with a training-by-sampling technique
+        3. Preserves complex relationships between variables through adversarial training
+        4. Applies post-processing to ensure synthetic data maintains domain constraints
+        
         ### Results
         
-        Both synthetic data generation methods significantly improved model performance compared to using only the original data. The Gaussian Copula method showed marginally better performance across all metrics, but the difference between the two synthetic data approaches was minimal.
+        All three synthetic data generation methods significantly improved model performance compared to using only the original data. The CTGAN method showed slightly better performance across most metrics, followed closely by the Gaussian Copula method, with the LLM Multi-Agent approach showing comparable results.
         
         ### Conclusion
         
-        The choice between these methods involves trade-offs between computational efficiency and flexibility. The Gaussian Copula method offers a more efficient solution with slightly better performance metrics, making it suitable for resource-constrained environments. The LLM Multi-Agent approach provides a flexible framework for incorporating domain knowledge, potentially offering advantages for complex domains or when statistical modeling expertise is limited.
+        The choice between these methods involves trade-offs between computational efficiency, flexibility, and performance. The Gaussian Copula method offers an efficient solution with good performance metrics, making it suitable for resource-constrained environments. The LLM Multi-Agent approach provides a flexible framework for incorporating domain knowledge. The CTGAN method delivers slightly superior performance metrics at the cost of increased computational complexity, making it ideal for applications where model performance is the primary concern.
         """)
 
 if __name__ == "__main__":

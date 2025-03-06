@@ -32,20 +32,26 @@ def main():
         print("Error in LLM Multi-Agent synthetic data generation. Exiting.")
         return
     
-    # Step 4: Run comparison training and evaluation
-    print("\n=== Step 4: Comparison Training and Evaluation ===")
+    # Step 4: Run GAN-based synthetic data generation
+    print("\n=== Step 4: CTGAN Synthetic Data Generation ===")
+    if run_command("python preprocess_gan_synthetic.py") != 0:
+        print("Error in CTGAN synthetic data generation. Exiting.")
+        return
+    
+    # Step 5: Run comparison training and evaluation
+    print("\n=== Step 5: Comparison Training and Evaluation ===")
     if run_command("python train_with_llm.py") != 0:
         print("Error in comparison training and evaluation. Exiting.")
         return
     
-    # Step 5: Generate tables for publication
-    print("\n=== Step 5: Generate Tables for Publication ===")
+    # Step 6: Generate tables for publication
+    print("\n=== Step 6: Generate Tables for Publication ===")
     if run_command("python generate_tables.py") != 0:
         print("Error in generating tables. Exiting.")
         return
     
-    # Step 6: Generate advanced visualizations
-    print("\n=== Step 6: Generate Advanced Visualizations ===")
+    # Step 7: Generate advanced visualizations
+    print("\n=== Step 7: Generate Advanced Visualizations ===")
     if run_command("python generate_visualizations.py") != 0:
         print("Error in generating visualizations. Exiting.")
         return
@@ -67,11 +73,15 @@ def verify_files():
         "output/processed_data.pkl",
         "output/processed_data_with_synthetic.pkl",
         "output/processed_data_with_llm_synthetic.pkl",
+        "output/processed_data_with_gan_synthetic.pkl",
         "output/cost_gaussian_copula.json",
         "output/cost_llm_multi_agent.json",
+        "output/cost_ctgan.json",
+        "output/scaler_with_gan_synthetic.pkl",
         "models/model_non_synthetic.pkl",
         "models/model_with_gaussian_synthetic.pkl",
         "models/model_with_llm_synthetic.pkl",
+        "models/model_with_gan_synthetic.pkl",
         "figures/synthetic_methods_comparison.png",
         "figures/radar_chart.png",
         "figures/correlation_heatmaps.png",

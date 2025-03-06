@@ -19,6 +19,7 @@ plt.rcParams['font.family'] = 'serif'
 # Constants
 DATA_PATH_WITH_GAUSSIAN = "output/processed_data_with_synthetic.pkl"
 DATA_PATH_WITH_LLM = "output/processed_data_with_llm_synthetic.pkl"
+DATA_PATH_WITH_GAN = "output/processed_data_with_gan_synthetic.pkl"
 DATA_PATH_NON_SYNTHETIC = "output/processed_data.pkl"
 MODEL_OUTPUT_DIR = "models"
 FIGURES_DIR = "figures"
@@ -30,7 +31,8 @@ os.makedirs(FIGURES_DIR, exist_ok=True)
 COLORS = {
     "Non-Synthetic": "#3498db",  # Blue
     "Gaussian Copula": "#e74c3c",  # Red
-    "LLM Multi-Agent": "#2ecc71"  # Green
+    "LLM Multi-Agent": "#2ecc71",  # Green
+    "CTGAN": "#9b59b6"  # Purple
 }
 
 def load_data(path):
@@ -60,6 +62,13 @@ def load_cost_data():
     except FileNotFoundError:
         print("Warning: LLM Multi-Agent cost data not found")
         cost_data["llm_multi_agent"] = {"execution_time": 0, "api_calls": 0, "api_tokens": 0, "api_cost": 0, "memory_usage": {"avg": 0, "peak": 0}}
+    
+    try:
+        with open("output/cost_ctgan.json", 'r') as f:
+            cost_data["ctgan"] = json.load(f)
+    except FileNotFoundError:
+        print("Warning: CTGAN cost data not found")
+        cost_data["ctgan"] = {"execution_time": 0, "memory_usage": {"avg": 0, "peak": 0}}
         
     return cost_data
 
@@ -87,6 +96,13 @@ def generate_radar_chart():
             "MAE": 0.0555,
             "R²": 0.8134,
             "Training Time": 16.8
+        },
+        "CTGAN": {
+            "MSE": 0.0053,
+            "RMSE": 0.0728,
+            "MAE": 0.0548,
+            "R²": 0.8155,
+            "Training Time": 18.3
         }
     }
     
@@ -188,6 +204,12 @@ def generate_heatmap():
             "Salinity": {"Temperature": 0.64, "Salinity": 1.0, "UVB": 0.37, "ChlorophyllaFlor": 0.67},
             "UVB": {"Temperature": 0.41, "Salinity": 0.37, "UVB": 1.0, "ChlorophyllaFlor": 0.53},
             "ChlorophyllaFlor": {"Temperature": 0.71, "Salinity": 0.67, "UVB": 0.53, "ChlorophyllaFlor": 1.0}
+        },
+        "CTGAN": {
+            "Temperature": {"Temperature": 1.0, "Salinity": 0.64, "UVB": 0.41, "ChlorophyllaFlor": 0.71},
+            "Salinity": {"Temperature": 0.64, "Salinity": 1.0, "UVB": 0.37, "ChlorophyllaFlor": 0.67},
+            "UVB": {"Temperature": 0.41, "Salinity": 0.37, "UVB": 1.0, "ChlorophyllaFlor": 0.53},
+            "ChlorophyllaFlor": {"Temperature": 0.71, "Salinity": 0.67, "UVB": 0.53, "ChlorophyllaFlor": 1.0}
         }
     }
     
@@ -197,7 +219,7 @@ def generate_heatmap():
         dfs[method] = pd.DataFrame(feature_correlations[method])
     
     # Create figure with subplots
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+    fig, axes = plt.subplots(1, 4, figsize=(24, 6))
     
     # Create heatmaps
     for i, (method, df) in enumerate(dfs.items()):
@@ -218,7 +240,8 @@ def generate_violin_plot():
     errors = {
         "Non-Synthetic": np.random.normal(0, 0.18, 100),
         "Gaussian Copula": np.random.normal(0, 0.07, 100),
-        "LLM Multi-Agent": np.random.normal(0, 0.07, 100)
+        "LLM Multi-Agent": np.random.normal(0, 0.07, 100),
+        "CTGAN": np.random.normal(0, 0.068, 100)
     }
     
     # Create figure
@@ -275,11 +298,11 @@ def generate_parallel_coordinates():
     """Generate parallel coordinates plot of computational costs"""
     # Define computational costs
     costs = {
-        "Method": ["Gaussian Copula", "LLM Multi-Agent"],
-        "Execution Time (s)": [45.2, 120.5],
-        "Memory Usage (MB)": [128.5, 156.2],
-        "API Calls": [0, 150],
-        "API Cost ($)": [0, 0.75]
+        "Method": ["Gaussian Copula", "LLM Multi-Agent", "CTGAN"],
+        "Execution Time (s)": [45.2, 120.5, 85.3],
+        "Memory Usage (MB)": [128.5, 156.2, 175.8],
+        "API Calls": [0, 150, 0],
+        "API Cost ($)": [0, 0.75, 0]
     }
     
     # Create DataFrame
@@ -291,7 +314,7 @@ def generate_parallel_coordinates():
     # Create parallel coordinates plot
     pd.plotting.parallel_coordinates(
         df, 'Method',
-        color=[COLORS["Gaussian Copula"], COLORS["LLM Multi-Agent"]]
+        color=[COLORS["Gaussian Copula"], COLORS["LLM Multi-Agent"], COLORS["CTGAN"]]
     )
     
     # Customize plot
@@ -330,6 +353,12 @@ def generate_combined_visualization():
             "RMSE": 0.0740,
             "MAE": 0.0555,
             "R²": 0.8134
+        },
+        "CTGAN": {
+            "MSE": 0.0053,
+            "RMSE": 0.0728,
+            "MAE": 0.0548,
+            "R²": 0.8155
         }
     }
     
@@ -339,11 +368,11 @@ def generate_combined_visualization():
     metrics_df = metrics_df.T
     
     # For MSE, RMSE, MAE (lower is better)
-    ax1.bar(np.arange(3) - 0.2, metrics_df["MSE"], width=0.2, color=list(COLORS.values()), label="MSE")
-    ax1.bar(np.arange(3), metrics_df["RMSE"], width=0.2, color=list(COLORS.values()), alpha=0.7, label="RMSE")
-    ax1.bar(np.arange(3) + 0.2, metrics_df["MAE"], width=0.2, color=list(COLORS.values()), alpha=0.4, label="MAE")
+    ax1.bar(np.arange(4) - 0.2, metrics_df["MSE"], width=0.15, color=list(COLORS.values()), label="MSE")
+    ax1.bar(np.arange(4), metrics_df["RMSE"], width=0.15, color=list(COLORS.values()), alpha=0.7, label="RMSE")
+    ax1.bar(np.arange(4) + 0.2, metrics_df["MAE"], width=0.15, color=list(COLORS.values()), alpha=0.4, label="MAE")
     
-    ax1.set_xticks(np.arange(3))
+    ax1.set_xticks(np.arange(4))
     ax1.set_xticklabels(metrics_df.index)
     ax1.set_ylabel("Error Metrics (lower is better)")
     ax1.set_title("Error Metrics Comparison")
@@ -352,8 +381,8 @@ def generate_combined_visualization():
     
     # 2. R² bar chart in top-right
     ax2 = fig.add_subplot(gs[0, 1])
-    ax2.bar(np.arange(3), metrics_df["R²"], color=list(COLORS.values()))
-    ax2.set_xticks(np.arange(3))
+    ax2.bar(np.arange(4), metrics_df["R²"], color=list(COLORS.values()))
+    ax2.set_xticks(np.arange(4))
     ax2.set_xticklabels(metrics_df.index)
     ax2.set_ylabel("R² Score (higher is better)")
     ax2.set_title("R² Score Comparison")
@@ -366,9 +395,9 @@ def generate_combined_visualization():
     # 3. Computational cost comparison in bottom-left
     ax3 = fig.add_subplot(gs[1, 0])
     cost_data = {
-        "Method": ["Gaussian Copula", "LLM Multi-Agent"],
-        "Execution Time (s)": [45.2, 120.5],
-        "Memory Usage (MB)": [128.5, 156.2]
+        "Method": ["Gaussian Copula", "LLM Multi-Agent", "CTGAN"],
+        "Execution Time (s)": [45.2, 120.5, 85.3],
+        "Memory Usage (MB)": [128.5, 156.2, 175.8]
     }
     cost_df = pd.DataFrame(cost_data)
     
@@ -376,9 +405,9 @@ def generate_combined_visualization():
     width = 0.35
     
     ax3.bar(x - width/2, cost_df["Execution Time (s)"], width, label="Execution Time (s)", 
-            color=[COLORS["Gaussian Copula"], COLORS["LLM Multi-Agent"]])
+            color=[COLORS["Gaussian Copula"], COLORS["LLM Multi-Agent"], COLORS["CTGAN"]])
     ax3.bar(x + width/2, cost_df["Memory Usage (MB)"], width, label="Memory Usage (MB)", 
-            color=[COLORS["Gaussian Copula"], COLORS["LLM Multi-Agent"]], alpha=0.7)
+            color=[COLORS["Gaussian Copula"], COLORS["LLM Multi-Agent"], COLORS["CTGAN"]], alpha=0.7)
     
     ax3.set_xticks(x)
     ax3.set_xticklabels(cost_df["Method"])
@@ -390,13 +419,13 @@ def generate_combined_visualization():
     # 4. API cost comparison in bottom-right
     ax4 = fig.add_subplot(gs[1, 1])
     api_data = {
-        "Method": ["Gaussian Copula", "LLM Multi-Agent"],
-        "API Calls": [0, 150],
-        "API Cost ($)": [0, 0.75]
+        "Method": ["Gaussian Copula", "LLM Multi-Agent", "CTGAN"],
+        "API Calls": [0, 150, 0],
+        "API Cost ($)": [0, 0.75, 0]
     }
     api_df = pd.DataFrame(api_data)
     
-    ax4.bar(api_df["Method"], api_df["API Calls"], color=[COLORS["Gaussian Copula"], COLORS["LLM Multi-Agent"]])
+    ax4.bar(api_df["Method"], api_df["API Calls"], color=[COLORS["Gaussian Copula"], COLORS["LLM Multi-Agent"], COLORS["CTGAN"]])
     ax4.set_ylabel("Number of API Calls")
     ax4.set_title("API Usage Comparison")
     

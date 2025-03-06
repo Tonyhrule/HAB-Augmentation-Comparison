@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 DATA_PATH_WITH_GAUSSIAN = "output/processed_data_with_synthetic.pkl"
 DATA_PATH_WITH_LLM = "output/processed_data_with_llm_synthetic.pkl"
+DATA_PATH_WITH_GAN = "output/processed_data_with_gan_synthetic.pkl"
 DATA_PATH_NON_SYNTHETIC = "output/processed_data.pkl"
 MODEL_OUTPUT_DIR = "models"
 FIGURES_DIR = "figures"
@@ -70,26 +71,27 @@ def train_and_evaluate(X_train, X_test, y_train, y_test, output_model_path, use_
 
     return metrics
 
-def plot_comparison(non_synthetic_metrics, gaussian_metrics, llm_metrics):
+def plot_comparison(non_synthetic_metrics, gaussian_metrics, llm_metrics, gan_metrics):
     """
-    Create a 2x2 grid of bar charts comparing performance metrics across three models.
+    Create a 2x2 grid of bar charts comparing performance metrics across four models.
     Highlights the best performing model for each metric with a distinct color.
     """
     metrics = ["MSE", "RMSE", "MAE", "R²"]
-    models = ["Non-Synthetic", "Gaussian Copula", "LLM Multi-Agent"]
+    models = ["Non-Synthetic", "Gaussian Copula", "LLM Multi-Agent", "CTGAN"]
     
     # Create a figure with subplots
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     axes = axes.flatten()
     
     # Define colors for visual distinction
-    colors = ["#3498db", "#e74c3c", "#2ecc71"]
+    colors = ["#3498db", "#e74c3c", "#2ecc71", "#9b59b6"]
     
     for i, metric in enumerate(metrics):
         values = [
             non_synthetic_metrics[metric],
             gaussian_metrics[metric],
-            llm_metrics[metric]
+            llm_metrics[metric],
+            gan_metrics[metric]
         ]
         
         # For R², higher is better, so we invert the comparison
@@ -138,6 +140,14 @@ def main():
         os.path.join(MODEL_OUTPUT_DIR, "model_with_llm_synthetic.pkl"),
         use_grid_search=True
     )
+    
+    print("\nTraining with CTGAN synthetic data...")
+    X_train_gan, X_test_gan, y_train_gan, y_test_gan = load_data(DATA_PATH_WITH_GAN)[:4]
+    gan_metrics = train_and_evaluate(
+        X_train_gan, X_test_gan, y_train_gan, y_test_gan,
+        os.path.join(MODEL_OUTPUT_DIR, "model_with_gan_synthetic.pkl"),
+        use_grid_search=True
+    )
 
     print("\n--- Final Summary ---")
     print("Metrics for Non-Synthetic Data:")
@@ -151,9 +161,13 @@ def main():
     print("\nMetrics for LLM Multi-Agent Synthetic Data:")
     for key, value in llm_metrics.items():
         print(f"  {key}: {value:.4f}")
+        
+    print("\nMetrics for CTGAN Synthetic Data:")
+    for key, value in gan_metrics.items():
+        print(f"  {key}: {value:.4f}")
 
     # Plot comparison
-    plot_comparison(non_synthetic_metrics, gaussian_metrics, llm_metrics)
+    plot_comparison(non_synthetic_metrics, gaussian_metrics, llm_metrics, gan_metrics)
     print(f"\nComparison plot saved to {os.path.join(FIGURES_DIR, 'synthetic_methods_comparison.png')}")
 
 if __name__ == "__main__":
