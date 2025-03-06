@@ -1,4 +1,4 @@
-# Ignore folders containing models
+# Ignore folders containing models 
 *model*/
 
 # Ignore folders containing datasets

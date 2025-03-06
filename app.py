@@ -489,7 +489,13 @@ def main():
                 
                 # Prepare input data
                 import numpy as np  # Import numpy locally to ensure it's available
+                from sklearn.preprocessing import PolynomialFeatures
                 input_data = np.array([[temperature, salinity, uvb]])
+                
+                # Apply polynomial transformation only for CTGAN model
+                if model_choice == "Model with CTGAN Synthetic Data":
+                    poly = PolynomialFeatures(degree=2, interaction_only=True, include_bias=False)
+                    input_data = poly.fit_transform(input_data)
                 
                 # Scale the input data
                 input_data_scaled = scaler.transform(input_data)
@@ -676,10 +682,23 @@ def main():
                 st.write("The following factors influenced this prediction:")
                 
                 # Create a bar chart showing feature importance
-                feature_importance = pd.DataFrame({
-                    'Feature': ['Temperature', 'Salinity', 'UVB'],
-                    'Importance': model.feature_importances_
-                })
+                if model_choice == "Model with CTGAN Synthetic Data":
+                    # For CTGAN model, we have 6 features (original + interaction terms)
+                    # Get the feature names including interaction terms
+                    feature_names = ['Temperature', 'Salinity', 'UVB', 
+                                    'Temperature*Salinity', 'Temperature*UVB', 'Salinity*UVB']
+                    
+                    # Create DataFrame with all 6 features
+                    feature_importance = pd.DataFrame({
+                        'Feature': feature_names,
+                        'Importance': model.feature_importances_
+                    })
+                else:
+                    # For other models, we have the original 3 features
+                    feature_importance = pd.DataFrame({
+                        'Feature': ['Temperature', 'Salinity', 'UVB'],
+                        'Importance': model.feature_importances_
+                    })
                 
                 fig, ax = plt.subplots(figsize=(8, 4))
                 sns.barplot(x='Importance', y='Feature', data=feature_importance, ax=ax)
@@ -822,6 +841,11 @@ def main():
                                 for i in range(days):
                                     # Prepare input data
                                     input_data = np.array([[temp_series[i], sal_series[i], uvb_series[i]]])
+                                    
+                                    # Apply polynomial transformation only for CTGAN model
+                                    if model_choice == "Model with CTGAN Synthetic Data":
+                                        poly = PolynomialFeatures(degree=2, interaction_only=True, include_bias=False)
+                                        input_data = poly.fit_transform(input_data)
                                     
                                     # Scale the input data
                                     input_data_scaled = sim_scaler.transform(input_data)
